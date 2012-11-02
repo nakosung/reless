@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <script type="text/javascript" src="../js/angular.min.js"></script>
+</head>
+<script type="text/javascript">
+    var myApp = angular.module('MyApp',[])
+    var updateOnBlur = function() {
+        return {
+            restrict: 'EA',
+            require: 'ngModel',
+            link: function(scope, elm, attr, ngModelCtrl) {
+
+                if (attr.type === 'radio' || attr.type === 'checkbox') {
+                    return;
+                }
+                elm.unbind('input').unbind('keydown').unbind('change');
+                elm.bind('blur', function() {
+                    scope.$apply(function() {
+                        ngModelCtrl.$setViewValue(elm.val());
+                    });
+                });
+            }
+        };
+    };
+
+    myApp.directive('input', updateOnBlur);
+    myApp.directive('textarea', updateOnBlur);
+</script>
+<body ng-app='MyApp'>
+<script type="text/javascript">
+    log = console.log;
+
+    Array.prototype.unique = function() {
+        var o = {}, i, l = this.length, r = [];
+        for(i=0; i<l;i+=1) o[this[i]] = this[i];
+        for(i in o) r.push(o[i]);
+        return r;
+    };
+
+    function refactor(input) {
+        colors = {};
+
+        input = input.trim();
+        input = input.replace(/\s+/g,' ');
+        function eat(x) {
+            var r = input.substring(0,x);
+            input = input.substring(x);
+            return r;
+        }
+        function token() {
+            if (input.length == 0) throw 'unexpected end';
+            var a = input.indexOf("{");
+            var b = input.indexOf("}");
+            var c = input.indexOf(";");
+            if (a == 0 || b == 0) return eat(1);
+            if (a < 0 && b < 0) { return eat(c < 0 ? input.length : c+1); }
+            if (b < 0 || a>0 && a<b) return eat(c < 0 || c > a ? a : c+1);
+            if (a < 0 || b>0 && b<a) return eat(c < 0 || c > b ? b : c+1);
+        }
+
+        function add(root,key) {
+            key = key.replace(/>\s*/g,'>');
+            key = key.replace(/([^ ])\./g,'$1 &.');
+            key = key.replace(/:/g,' &:');
+            function _add(root,key,o) {
+                function merge(a,b) {
+                    var sub = a.sub;
+                    Object.keys(b.sub).forEach(function(k){
+                        if (sub[k] == undefined) {
+                            sub[k] = b.sub[k];
+                        } else {
+                            sub[k] = merge(sub[k], b.sub[k]);
+                        }
+                    });
+                    return {sub:sub,prop:[a.prop, b.prop].join(' ').trim()};
+                }
+                function ___add(root,x,o) {
+                    if (root[x]) {
+                        root[x] = merge(root[x],o);
+                    } else {
+                        root[x] = o;
+                    }
+                }
+                function __add(root,x,o) {
+                    var k = x.split(' ');
+                    while (k.length > 1) {
+                        var a = k.shift();
+                        if (root[a] == undefined) {
+                            var T = {sub:{},prop:''};
+                            root[a] = T;
+                        }
+                        root = root[a].sub;
+                     }
+                    //___add(root, k.shift(),o);
+                    ___add(root, k.shift(),o);
+                }
+                key.split(',').map(function(x){return x.trim()}).forEach(function(x){
+                    __add(root,x,o);
+                })
+            }
+
+            /*var k = key.split(' ');
+            while (k.length > 1) {
+                var a = k.shift();
+                var T = {sub:{},prop:''};
+                console.log(a);
+                root[a] = T;
+                root = T;
+            }
+            _add(root, k.shift(),go());*/
+            _add(root, key,go());
+        }
+
+        function go() {
+            // obj := T '{' [ T, obj ]* '}'
+            var prop = [];
+            var sub = {};
+
+            var x = token();
+            if (x != '}') {
+                while (true) {
+                    var y = token();
+                    if (y == '{') {
+                        add(sub,x);
+                        x = token();
+                    } else if (y == '}') {
+                        prop.push(x.trim());
+                        break;
+                    } else {
+                        prop.push(x.trim());
+                        x = y;
+                    }
+                }
+            }
+
+            return {sub:sub,prop:prop.join(' ')};
+        }
+
+
+
+        function rule(rp) {
+            var set = {
+                'float':{left:'.fl',right:'.fr'},
+                'font-weight':{bold:'.bold',normal:'.normal'},
+                'display':{block:'.block',none:'.none','inline-block':'.inline-block'},
+                'cursor':{pointer:'.cp'},
+                'position':{absolute:'.abs',relative:'.rel'},
+                'clear':{both:'.cb'},
+                'text-align':{center:'.tcenter',left:'.tleft',right:'.tright'},
+                'vertical-align':{center:'.vcenter'},
+                'padding':{'0':'.zpadding' },
+                'margin':{'0':'.zmargin' }
+            };
+            Object.keys(set).forEach(function(k){
+                rp(k,set[k]);
+            })
+        }
+
+        function get_rule() {
+            var r = [];
+            r.push('/* redduck - auto generated functions */')
+            function emit_rule(k,h) {
+                Object.keys(h).forEach(function(x){
+                    r.push(h[x] + ' { '+k+':'+x+'; }');
+                })
+            }
+            rule(emit_rule);
+            r.push('.size(@w,@h) { width:@w; height:@h; }');
+            return r.join('\n')
+        }
+
+        function RGBtoXYZ(r,g,b)
+        {
+            return {
+                X : 0.607 * r + 0.174 * g + 0.200 * b,
+                Y : 0.299 * r + 0.587 * g + 0.114 * b,
+                Z : 0.000 * r + 0.066 * g + 1.116 * b
+            };
+        }
+
+        function post(x) {
+            if (x.prop && x.prop != '') {
+                var prop = x.prop.trim().split(";");
+                var r = [];
+                var d = {};
+                prop.forEach(function(p){
+                    var i = p.indexOf(":");
+                    if (i<0) {
+                        if (p.length)
+                            r.push(p);
+                    } else {
+                        var k = p.substring(0,i).trim();
+                        var v = p.substring(i+1).trim();
+
+                        var re = /#([0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f])/g;
+                        var re2 = /@color\-([0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f])/g;
+                        function hex2(n) {
+                            var x = n.toString(16);
+                            if (x.length == 1) {
+                                return "0" + x;
+                            } else {
+                                return x;
+                            }
+                        }
+                        var re3 = /rgba\(([^\)]+)\)/g;
+                        function conv_rgba(str,p1,offset,s) {
+                            var x = p1.split(',');
+                            var r = parseInt(x[0]);
+                            var g = parseInt(x[1]);
+                            var b = parseInt(x[2]);
+                            var fade = x[3];
+                            var color = "#"+hex2(r)+hex2(g)+hex2(b);
+                            return "fade("+color+","+fade+")";
+                        }
+                        v = v.replace(re3,conv_rgba)
+                        function convert(str,p1,offset,s) {
+                            var c = colors[p1];
+                            if (c == undefined) {
+                                colors[p1] = c = {
+                                    r : parseInt(p1.substr(0,2),16),
+                                    g : parseInt(p1.substr(2,2),16),
+                                    b : parseInt(p1.substr(4,2),16),
+                                    ref : 1
+                                }
+
+                                if (c.r == c.g && c.r == c.b) {
+                                    if (c.r == 0) {
+                                        c.name = "black"
+                                    } else if (c.r == 255) {
+                                        c.name = "white"
+                                    } else {
+                                        c.name = "@gray-"+ hex2(c.r);
+                                    }
+                                } else {
+                                    c.name = "@color-"+p1;
+                                }
+                            } else {
+                                c.ref++;
+                            }
+                            return c.name;
+                        }
+                        v = v.replace(re2,convert);
+                        v = v.replace(re,convert);
+
+                        d[k] = v;
+                    }
+                });
+                function rp(k,h){
+                    var vv = d[k];
+                    var rr = h[vv] || vv == '0' && h['0px'];
+                    if (rr) {
+                        delete d[k];
+                        r.push(rr);
+                    }
+                }
+                rule(rp);
+                if (d.width && d.height) {
+                    var rr = '.size('+ d.width+','+ d.height+')';
+                    if (!rr.match(/!important/i)) {
+                        r.push(rr);
+                        delete d.width;
+                        delete d.height;
+                    }
+                }
+
+                Object.keys(d).forEach(function(k){
+                    r.push([k,d[k]].join(':'));
+                });
+                prop = r.join("; ") + ";";
+
+                x.prop = prop.replace(';;',';');
+            }
+            Object.keys(x.sub).forEach(function(y){
+                post(x.sub[y]);
+            })
+        }
+
+        function collapse(x) {
+            var k = Object.keys(x.sub);
+            k.forEach(function(k){
+                collapse(x.sub[k]);
+            })
+
+            var new_sub = {};
+
+            for (var i=0; i< k.length; ++i) {
+                var a = k[i];
+                var T = [a];
+                if (x.sub[a].deleted) continue;
+                var A = JSON.stringify(x.sub[a]);
+
+                if (a == "&") {
+                    var AA = x.sub[a].sub;
+                    var l = Object.keys(AA);
+                    l.forEach(function(z){
+                        new_sub[z] = AA[z];
+                    })
+                    continue;
+                }
+
+                for (var j=i+1; j< k.length; ++j) {
+                    var b = k[j];
+                    var B = JSON.stringify(x.sub[b]);
+                    if (A == B) {
+                        T.push(b);
+                        x.sub[b].deleted = true;
+                    }
+                }
+                new_sub[T.join(', ')] = x.sub[a];
+            }
+
+            x.sub = new_sub;
+        }
+
+
+
+        function dump(x,indent) {
+            var output = '';
+            indent = indent || '';
+            var k = Object.keys(x.sub);
+            if (x.prop && x.prop != '') {
+                output += indent + x.prop + "\n";
+            }
+            k.forEach(function(y){
+                var loc = y;
+                var t = x.sub[y];
+                while (true) {
+                    var kk = Object.keys(t.sub);
+                    if (kk.length == 1 && t.prop == '') {
+                        loc += ' ' + kk[0];
+                        t = t.sub[kk[0]];
+                    } else {
+                        break;
+                    }
+                }
+                loc = loc.replace(/([^,]) &/g,'$1');
+                if (indent == '') {
+                    loc = loc.replace(/^&/,'');
+                }
+                output += indent + loc + ' {' + '\n';
+                output += dump(t,indent + '  ');
+                output += indent + "}\n";
+            })
+            return output;
+        }
+
+        var root = {sub:{}};
+        while (input.length) {
+            var key = token();
+            if (token() != "{") throw 'error';
+            add(root.sub,key);
+        }
+        post(root)
+        collapse(root)
+
+        function get_colors() {
+            var r = [];
+            Object.keys(colors).forEach(function(x){
+                var c = colors[x];
+                if (c.name[0] == '@') {
+                    r.push(c.name+':#'+x+'; // '+colors[x].ref+' times referenced');
+                }
+            })
+            return r.sort().join('\n')
+        }
+
+        return [ get_rule(), get_colors(), dump(root) ].join('\n\n\n');
+    }
+    console.log(refactor());
+
+
+
+    function Ctrl($scope) {
+        $scope.input =  '    ul.qequip_list {        li.selected, li:hover {            background:#393939;        }        li.selected div.weapon_wrap, li:hover div.weapon_wrap {            background:#1d1612;        }        li.selected > span, li:hover > span {            font-weight:bold;            color:#ffffff;            text-shadow:-1px 0 rgba(0,0,0,0.3), 0 1px rgba(0,0,0,0.3), 1px 0 rgba(0,0,0,0.3), 0 -1px rgba(0,0,0,0.3), 1px 1px 6px rgba(255,255,255,0.25), -1px -1px 6px rgba(255,255,255,0.25), -1px 1px 6px rgba(255,255,255,0.25), 1px -1px 6px rgba(255,255,255,0.25);        }        li {            cursor:pointer;            position:relative;            width:100%;            height:99px;            border:1px solid #000000;            background:#2a2a2a;            -webkit-box-sizing:border-box;            -webkit-box-shadow:inset 1px 1px 0px 0px #383838, inset -1px -1px 0px 0px #232323;        > span {                position:absolute;                left:4px;                top:30px;                display:inline-block;                width:45px;                line-height:18px;                font-size:12px;                text-align:center;            }            div.weapon_wrap {                position:absolute;                right:4px;                top:4px;                width:213px;                height:89px;                line-height:89px;                text-align:center;                border:1px solid #040404;                background:#202020;                -webkit-box-sizing:border-box;                -webkit-box-shadow:inset 1px 1px 0px 0px #1f1f1f, inset -1px -1px 0px 0px #050505;                overflow:hidden;            > img {                    vertical-align:middle;                }            > span {                    position:absolute;                    right:6px;                    top:6px;                }            > div {                    position:absolute;                    left:0px;                    bottom:0px;                    width:100%;                    height:26px;                    line-height:26px;                    text-indent:10px;                    text-align:left;                    border-top:1px solid rgba(0,0,0,0.23);                    background:rgba(0,0,0,0.2);                }            > input {                    position:absolute;                    right:3px;                    bottom:3px;                    width:61px;                    height:21px;                }            }            div.category img {                margin:13px 0 0 12px;            }        }    }';
+        $scope.go = function(){
+            $scope.output = refactor($scope.input);
+        }
+    }
+
+
+
+
+</script>
+<h3>OK! refactor LESS</h3>
+<div ng-controller='Ctrl'>
+    <style type="text/css">
+        table { width: 100% }
+        td { width: 50% ;}
+    </style>
+    <table>
+        <button ng-click="go()">GO!</button>
+        <tr>
+            <td>
+                <textarea style='height:465px;width:600px' ng-model='input' update-on-blur></textarea>
+            </td>
+            <td>
+                <pre>{{output}}</pre>
+            </td>
+        </tr>
+    </table>
+
+
+</div>
+</body>
+</html>
