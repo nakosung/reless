@@ -43,10 +43,8 @@
 </script>
 <body ng-app='MyApp'>
 <script type="text/javascript">
-        input = input.replace(/\/\*[^*]*\*\//g,'');
-        input = input.replace(/\/\/[^\n]*/g,'');
 
-    function Ctrl($scope,$element,$window) {
+    function Ctrl($scope,$element,$window,$log) {
         $scope.input = $('.example',$element).html();
         $scope.go = function(){
             var env = {};
@@ -84,6 +82,11 @@
             $scope.M = $window.document.width * 9 / 10  / $scope.colors.length;
         }
 
+        $scope.select_color=function(k,v){
+            $scope.color_code = k;
+            $scope.color_data = v;
+        }
+
         $scope.go();
     }
 
@@ -92,10 +95,6 @@
 
 </script>
 <style type="text/css">
-    .dot {
-        position:absolute;
-        display:block;
-    }
 </style>
 <h3>RE-LESS; Less refactorizer</h3>
 <p>http://github.com/nakosung/reless</p>
@@ -103,77 +102,49 @@
     <style type="text/css">
         table { width: 100%; }
         td { width: 50% ;}
+        .colorplot {
+            right:30px;
+            top:30px;
+            width:400px; height:400px;
+            position:absolute;
+            background:rgba(1,1,0,0.1)
+        }
+        .colorplot .dot {
+            position:absolute;
+            display:block;
+        }
     </style>
     <div>
-        <span ng-repeat="(k,v) in env.colors" class='dot' style=
-                'background:#{{k}};left:{{(v.CIELab.a+100)*2}}px;top:{{(v.CIELab.b+100)*2}}px;width:{{v.S}}px;height:{{v.S}}px;outline:solid 1px #{{v.N}}'></span>
-        <div style='clear:both'></div>
+        <div class='colorplot'>
+            <div><span style='width:10px;height:10px;background:#{{color_code}}'>color info</span> #{{color_code}} l{{color_data.CIELab.l | number:1}} a{{color_data.CIELab.a | number:1}} b{{color_data.CIELab.b | number:1}}</div>
+        <span ng-repeat="(k,v) in env.colors" class='dot'
+              ng-mouseover='select_color(k,v)'
+              style=
+                'z-index:200;cursor:pointer;background:#{{k}};left:{{(v.CIELab.a+100)*2}}px;top:{{(v.CIELab.b+100)*2}}px;width:{{v.S}}px;height:{{v.S}}px;outline:solid 1px #{{v.N}}'>
 
-        <span ng-repeat="k in Ls" style='background:#{{k}};width:{{M}}px;height:{{40*env.colors[k].ref/max_ref+M}}px;display:block;float:left'></span>
-        <div style='clear:both;height:300px'></div>
+                </span>
+        <div style='clear:both'></div>
+        </div>
+
+        <!--<span ng-repeat="k in Ls" style='background:#{{k}};width:{{M}}px;height:{{40*env.colors[k].ref/max_ref+M}}px;display:block;float:left'></span>-->
+        <!--<div style='clear:both;height:300px'></div>-->
 
     </div>
-    <table>
-        <button ng-click="go()">GO!</button>
-        <tr>
-            <td>
-                <textarea ng-model='input' update-on-blur></textarea>
-            </td>
-            <td>
-                <textarea ui-codemirror="{theme:'monokai',lineWrapping:true}" ng-model='output'></textarea>
-            </td>
-        </tr>
-    </table>
+    <button ng-click="go()">RE-LESS!</button>
+
+    <div>
+        <textarea ui-codemirror ng-model='input' update-on-blur></textarea>
+    </div>
+    <div>
+        <textarea ui-codemirror="{theme:'monokai'}" ng-model='output'></textarea>
+    </div>
+
     <textarea name="example" class="example" cols="30" rows="10" style='display:none'>
-    //@MIXIN{}
-    .none{display:none;}
-    .block{display:block;}
-    .inline{display:inline-block;}
-    .trans{background:transparent;}
-    .black-border{border:1px solid #000;}
-    .zborder{border:0px;}
-    .zpadding{padding:0;}
-    .zmargin{margin:0;}
-    .border-box{-webkit-box-sizing:border-box;}
-    .vcenter{vertical-align:middle;}
-    .tcenter{text-align:center;}
-    .rel{position:relative;}
-    .abs{position:absolute;}
-    .bold{font-weight:bold;}
-    .normal{font-weight:normal;}
-    .fl{float:left;}
-    .fr{float:right;}
-    .cp{cursor:pointer;}
-    .cb{clear:both;}
-    .pd_r1{padding-right:1px;}
-    .outline1(@color) {outline:solid 1px @color}
-    .size(@w,@h) {width:@w;height:@h}
-    .xy(@x,@y) {top:@y;left:@x}
-    .bg-norepeat(@img) {background:url(@img) no-repeat}
-    //@MIXOUT{}
-    .scroll{width:100%;height:100%;overflow:hidden;overflow-y:auto;}
-    .customScroll::-webkit-scrollbar{width:14px;}
-    .customScroll::-webkit-scrollbar-track{border-right:1px solid #020202;background:#0c0c0c;}
-    .customScroll::-webkit-scrollbar-thumb{cursor:pointer;width:12px;border:1px solid #060d10;background:#05bee4;}
-    .truncate{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .wrap{position:relative;width:1280px;height:960px;margin:0 auto;}
-    .top{position:relative;width:1280px;height:117px;margin:0 auto;background:url(../img/top/top_bg.png) center 0 no-repeat;}
-    .info{position:relative;width:375px;height:117px;float:left;float:left;}
-    .gnb{position:relative;width:599px;height:117px;float:right;float:right;}
-    .contents{position:relative;width:1280px;height:692px;padding:55px 0;margin:0 auto;clear:both;clear:both;z-index:100;overflow:hidden;}
-    .contents_swf{position:absolute;width:1280px;height:802px;z-index:1;top:0;left:0;display:none;}
-    .contents_bg{position:absolute;width:1280px;height:802px;z-index:107;background:url(../img/contents/contents_bg.png);top:0;left:0;display:none;}
-    .if{position:relative;width:1126px;height:689px;margin:0 auto;clear:both;clear:both;}
-    .footer{position:relative;width:1280px;height:41px;margin:-3px auto 0;clear:both;clear:both;background:url(../img/footer/footer_bg.png) center 0 no-repeat;}
-    .f_bt{position:relative;float:left;float:left;width:548px;height:41px;}
-    .f_gift{position:relative;float:left;float:left;width:182px;height:41px;background:url(../img/footer/f_bt_bg.png);}
-    .f_slide{position:relative;float:left;float:left;width:365px;height:41px;}
-    .exit{position:relative;float:right;float:right;width:284px;height:41px;background:url("../img/footer/exit_bg.png") no-repeat;}
-    .users{position:absolute;left:-285px;top:61px;z-index:107;}
-    .users_tab{position:relative;width:285px;height:670px;float:left;float:left;}
-    .users_img{position:relative;width:29px;height:279px;float:left;float:left;cursor:pointer;cursor:pointer;}.users_img span{position:absolute;width:29px;top:105px;left:0;text-align:center;color:#00ffff;font-size:12px;}
-    .users_tab1{display:block;}
-    .users_tab2{display:none;}
+        //@MIXIN{}
+        .rel{position:relative;}
+        .size(@w,@h) {width:@w;height:@h}
+        //@MIXOUT{}
+        .wrap{position:relative;width:1280px;height:960px}
 
 
     </textarea>

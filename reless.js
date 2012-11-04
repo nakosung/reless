@@ -6,7 +6,8 @@ Array.prototype.unique = function() {
 };
 
 function refactor(input,env) {
-    colors = {};
+    var indent_tab = '  '
+    var colors = {};
 
     function unescapeHTML(html) {
         return $("<div />").html(html).text();
@@ -14,7 +15,11 @@ function refactor(input,env) {
 
     input = unescapeHTML(input);
 
-    //input = input.replace(/&gt;/g,'>');
+    // strip comments
+    input = input.replace(/\/\/@MIX/g,'@@@MIX');
+    input = input.replace(/\/\/[^\n]*/g,'');
+    input = input.replace(/@@@MIX/g,'//@MIX')
+
     input = input.replace(/\/\*[^\*]*\*\//g,'');
     input = input.trim();
     input = input.replace(/\s+/g,' ');
@@ -25,7 +30,7 @@ function refactor(input,env) {
     function eat(x) {
         var r = input.substring(0,x);
         input = input.substring(x);
-        return r;
+        return r.trim();
     }
 
     function token() {
@@ -89,14 +94,23 @@ function refactor(input,env) {
         // obj := T '{' [ T, obj ]* '}'
         var prop = [];
         var sub = {};
+        var mixins = {};
+        var mixin = false;
 
         var x = token();
         if (x != '}') {
-            while (true) {
+            while (input.length) {
+                if (x == '//@MIXIN') mixin = true;
+                if (x == '//@MIXOUT') mixin = false;
+
                 var y = token();
                 if (y == '{') {
                     add(sub,x);
-                    x = token();
+                    x = input.length && token();
+
+                    if (mixin) {
+                        mixins[x] = 1;
+                    }
                 } else if (y == '}') {
                     prop.push(x.trim());
                     break;
@@ -107,7 +121,7 @@ function refactor(input,env) {
             }
         }
 
-        return {sub:sub,prop:prop.join(' ')};
+        return {sub:sub,prop:prop.join(' '),mixins:mixins};
     }
 
     function post(x) {
@@ -250,8 +264,7 @@ function refactor(input,env) {
 //                console.log(mixinName,target)
             var a = mixin.p;
             var b = target.p;
-            if (!a || !b) return;
-
+            if (a == undefined || b == undefined) return;
 
             var n = a.length, m = b.length;
             if (n<=m) {
@@ -390,36 +403,19 @@ function refactor(input,env) {
                 loc = loc.replace(/^&/,'');
             }
             output += indent + loc + ' { ';
-            output += treeToText(t,indent + '  ');
+            output += treeToText(t,indent + indent_tab);
             output += "\n";
         })
 
-        if (multiline) output += indent;
-        if (!multiline || indent)
+        if (!multiline)
             output += "}";
+        else if (indent.length) {
+            output += indent.substr(0,indent.length-indent_tab.length) + '}'
+        }
         return output;
     }
 
-    var root = {sub:{},mixins:{},prop:''};
-    var mixin = false;
-    while (input.length) {
-        var key = token().trim();
-        while (true) {
-            if (key == '//@MIXIN') mixin = true;
-            if (key == '//@MIXOUT') mixin = false;
-            var t = token();
-            if (t != "{") {
-                root.prop += key + ';'
-                key = t;
-                continue;
-            }
-            add(root.sub,key);
-            if (mixin) {
-                root.mixins[key] = 1;
-            }
-            break;
-        }
-    }
+    var root = go();
     post(root)
     collapse(root)
     applyMixins(root,[])
