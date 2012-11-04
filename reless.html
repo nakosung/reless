@@ -13,6 +13,7 @@
     <script type="text/javascript" src="angular-ui.min.js"></script>
 
     <script type="text/javascript" src="ColorJizz%20-%20js%20-%200.2.js"></script>
+    <script type="text/javascript" src="reless.js"></script>
 </head>
 <script type="text/javascript">
 
@@ -42,450 +43,8 @@
 </script>
 <body ng-app='MyApp'>
 <script type="text/javascript">
-    log = console.log;
-
-    Array.prototype.unique = function() {
-        var o = {}, i, l = this.length, r = [];
-        for(i=0; i<l;i+=1) o[this[i]] = this[i];
-        for(i in o) r.push(o[i]);
-        return r;
-    };
-
-    function refactor(input,env) {
-        colors = {};
-
         input = input.replace(/\/\*[^*]*\*\//g,'');
         input = input.replace(/\/\/[^\n]*/g,'');
-        input = input.trim();
-        input = input.replace(/\s+/g,' ');
-        function eat(x) {
-            var r = input.substring(0,x);
-            input = input.substring(x);
-            return r;
-        }
-        function token() {
-            if (input.length == 0) throw 'unexpected end';
-            var a = input.indexOf("{");
-            var b = input.indexOf("}");
-            var c = input.indexOf(";");
-            if (a == 0 || b == 0) return eat(1);
-            if (a < 0 && b < 0) { return eat(c < 0 ? input.length : c+1); }
-            if (b < 0 || a>0 && a<b) return eat(c < 0 || c > a ? a : c+1);
-            if (a < 0 || b>0 && b<a) return eat(c < 0 || c > b ? b : c+1);
-        }
-
-        function add(root,key) {
-            key = key.replace(/>\s*/g,'>');
-            key = key.replace(/([^ ])\./g,'$1 &.');
-            key = key.replace(/([^:]):([^:])/g,'$1 &:$2');
-            key = key.replace(/\s*\+\s*/g,' &+');
-            key = key.replace(/\s*>\s*/g,' >');
-            function _add(root,key,o) {
-                function merge(a,b) {
-                    var sub = a.sub;
-                    Object.keys(b.sub).forEach(function(k){
-                        if (sub[k] == undefined) {
-                            sub[k] = b.sub[k];
-                        } else {
-                            sub[k] = merge(sub[k], b.sub[k]);
-                        }
-                    });
-                    return {sub:sub,prop:[a.prop, b.prop].join(' ').trim()};
-                }
-                function ___add(root,x,o) {
-                    if (root[x]) {
-                        root[x] = merge(root[x],o);
-                    } else {
-                        root[x] = o;
-                    }
-                }
-                function __add(root,x,o) {
-                    var k = x.split(' ');
-                    while (k.length > 1) {
-                        var a = k.shift();
-                        if (root[a] == undefined) {
-                            var T = {sub:{},prop:''};
-                            root[a] = T;
-                        }
-                        root = root[a].sub;
-                     }
-                    //___add(root, k.shift(),o);
-                    ___add(root, k.shift(),o);
-                }
-                key.split(',').map(function(x){return x.trim()}).forEach(function(x){
-                    __add(root,x,o);
-                })
-            }
-
-            /*var k = key.split(' ');
-            while (k.length > 1) {
-                var a = k.shift();
-                var T = {sub:{},prop:''};
-                console.log(a);
-                root[a] = T;
-                root = T;
-            }
-            _add(root, k.shift(),go());*/
-            _add(root, key,go());
-        }
-
-        function go() {
-            // obj := T '{' [ T, obj ]* '}'
-            var prop = [];
-            var sub = {};
-
-            var x = token();
-            if (x != '}') {
-                while (input.length) {
-                    var y = token();
-                    if (y == '{') {
-                        add(sub,x);
-                        x = input.length && token();
-                    } else if (y == '}') {
-                        prop.push(x.trim());
-                        break;
-                    } else {
-                        prop.push(x.trim());
-                        x = y;
-                    }
-                }
-            }
-
-            return {sub:sub,prop:prop.join(' ')};
-        }
-
-
-        function RGBtoXYZ(r,g,b)
-        {
-            return {
-                X : 0.607 * r + 0.174 * g + 0.200 * b,
-                Y : 0.299 * r + 0.587 * g + 0.114 * b,
-                Z : 0.000 * r + 0.066 * g + 1.116 * b
-            };
-        }
-
-        function post(x) {
-            if (x.prop && x.prop != '') {
-                var prop = x.prop.trim().split(";");
-                var r = [];
-                var d = {};
-                prop.forEach(function(p){
-                    var i = p.indexOf(":");
-                    if (i<0) {
-                        if (p.length)
-                            r.push(p);
-                    } else {
-                        var k = p.substring(0,i).trim();
-                        var v = p.substring(i+1).trim();
-
-                        var re = /#([0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f])/g;
-                        var re2 = /@color\-([0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f])/g;
-                        function hex2(n) {
-                            var x = n.toString(16);
-                            if (x.length == 1) {
-                                return "0" + x;
-                            } else {
-                                return x;
-                            }
-                        }
-                        var re3 = /rgba\(([^\)]+)\)/g;
-                        function conv_rgba(str,p1,offset,s) {
-                            var x = p1.split(',');
-                            var r = parseInt(x[0]);
-                            var g = parseInt(x[1]);
-                            var b = parseInt(x[2]);
-                            var fade = x[3];
-                            var color = "#"+hex2(r)+hex2(g)+hex2(b);
-                            return "fade("+color+","+fade+")";
-                        }
-                        v = v.replace(re3,conv_rgba)
-                        function convert(str,p1,offset,s) {
-                            var c = colors[p1];
-                            if (c == undefined) {
-                                colors[p1] = c = {
-                                    r : parseInt(p1.substr(0,2),16),
-                                    g : parseInt(p1.substr(2,2),16),
-                                    b : parseInt(p1.substr(4,2),16),
-                                    ref : 1
-                                }
-
-                                c.CIELab = Hex.fromString(p1).toCIELab();
-                                c.N = new CIELab(85,c.CIELab.a, c.CIELab.b).toHex().toString()
-
-
-                                if (c.r == c.g && c.r == c.b) {
-                                    if (c.r == 0) {
-                                        c.name = "black"
-                                    } else if (c.r == 255) {
-                                        c.name = "white"
-                                    } else {
-                                        c.name = "@gray-"+ hex2(c.r);
-                                    }
-                                } else {
-                                    c.name = "@color-"+p1;
-                                }
-                            } else {
-                                c.ref++;
-                            }
-                            return c.name;
-                        }
-                        v = v.replace(re2,convert);
-                        v = v.replace(re,convert);
-
-                        d[k] = v;
-                    }
-                });
-                function rp(k,h){
-                    var vv = d[k];
-                    var rr = h[vv] || vv == '0' && h['0px'];
-                    if (rr) {
-                        delete d[k];
-                        r.push(rr);
-                    }
-                }
-                Object.keys(d).forEach(function(k){
-                    r.push([k,d[k]].join(':'));
-                });
-                x.p = r.sort();
-            }
-            Object.keys(x.sub).forEach(function(y){
-                post(x.sub[y]);
-            })
-        }
-
-        function applyMixins(x,mixins) {
-            var lmixins = {};
-            $.extend(lmixins,mixins);
-            $.each(x.sub,function(k,v){
-                if (is_mixin(k)) {
-                    lmixins[k] = v
-                    v.args = []
-                    var args = k.replace(/.*\((.*)\)/,'$1').replace(/\s*/g,'').split(',').forEach(function(p){
-                        var x =  p.replace(/(@[^:)]*).*/,'$1')
-                        if (x.length) {
-                            v.args.push(x)
-                        }
-                    })
-
-                }
-            })
-            function match(a,b,args,def) {
-                while (true) {
-                    if (a == b) return true;
-
-                    var i = a.indexOf('@');
-                    if (i<0) return false;
-
-                    if (a.substring(0,i) != b.substring(0,i)) return false;
-
-                    var M = /[\s,\)].*/;
-                    a = a.substr(i);
-                    b = b.substr(i);
-
-
-
-                    var m = a.replace(M,'');
-                    var n = b.replace(M,'');
-
-
-                    if (args[m] == undefined) {
-                        console.warn('unknown param ', m)
-                        return false;
-                    }
-                    if (args[m] != def) {
-                        return false;
-                    }
-
-                    if (n.match(/\//)) {
-                        args[m] = '"' + n + '"'
-                    } else {
-                        args[m] = n;
-                    }
-
-                    a = a.substr(m.length)
-                    b = b.substr(n.length)
-                }
-                // never reach here
-            }
-            function replace(mixinName,mixin,target) {
-//                console.log(mixinName,target)
-                var a = mixin.p;
-                var b = target.p;
-                if (a == undefined || b == undefined) return;
-
-
-                var n = a.length, m = b.length;
-                if (n<=m) {
-                    var i = 0, j = 0;
-                    var r = [];
-
-                    var args = {}
-                    var def = {}
-                    mixin.args.forEach(function(k){
-                        args[k] = def
-                    })
-
-                    while (i < n && j < m) {
-                        var s = a[i], t = b[j];
-
-                        if (match(s,t,args,def)) {
-                            r.push(j);
-                            i++, j++;
-                        } else if (s > t) {
-                            j++;
-                        } else {
-                            break;
-                        }
-                    }
-                    if (i == n) {
-                        r.reverse().forEach(function(i){
-                            b.splice(i,1);
-                        });
-                        var that = mixinName.replace("()","");
-                        if (mixin.args.length) {
-                            $.each(args,function(k,v){
-                                that = that.replace(k,v);
-                            })
-                        }
-
-                        b.push(that);
-                        return true;
-                    }
-                }
-            }
-            var loop = 0;
-            while (true) {
-                var applied = 0;
-                $.each(x.sub,function(k,v){
-                    if (is_mixin(k)) return true;
-                    $.each(lmixins,function(mk,mv){
-                        if (angular.isObject(mv) && mv != v && replace(mk,mv,v)) {
-                            applied++;
-                        }
-                    })
-                })
-                if (applied == 0) break;
-                if (loop++ == 3) break;
-            }
-            $.each(x.sub,function(k,v){
-                applyMixins(v,lmixins)
-            })
-        }
-
-        function is_mixin(k) {
-            return k.match(/\(.*\)/);
-        }
-
-        function collapse(x) {
-            var k = Object.keys(x.sub);
-            k.forEach(function(k){
-                collapse(x.sub[k]);
-            })
-
-            var new_sub = {};
-
-            for (var i=0; i< k.length; ++i) {
-                var a = k[i];
-                var T = [a];
-                if (x.sub[a].deleted) continue;
-                var A = JSON.stringify(x.sub[a]);
-
-                if (a == "&") {
-                    var AA = x.sub[a].sub;
-                    var l = Object.keys(AA);
-                    l.forEach(function(z){
-                        new_sub[z] = AA[z];
-                    })
-                    continue;
-                }
-
-                if (!is_mixin(a)) {
-                    for (var j=i+1; j< k.length; ++j) {
-                        var b = k[j];
-                        var B = JSON.stringify(x.sub[b]);
-                        if (!is_mixin(b) && A == B) {
-                            T.push(b);
-                            x.sub[b].deleted = true;
-                        }
-                    }
-                }
-
-                new_sub[T.join(', ')] = x.sub[a];
-            }
-
-            x.sub = new_sub;
-        }
-
-
-
-        function dump(x,indent) {
-            if (x.p) {
-                x.prop = x.p.join("; ") + ";";
-                x.prop = x.prop.replace(';;',';');
-            }
-            var output = '';
-            indent = indent || '';
-            var k = Object.keys(x.sub);
-            var multiline = k.length > 0;
-            if (multiline) output += '\n';
-            if (x.prop && x.prop != '') {
-                if (multiline) output += indent;
-                output += x.prop;
-                if (multiline) output += '\n'; else output += ' ';
-            }
-
-            k.forEach(function(y){
-                var loc = y;
-                var t = x.sub[y];
-                while (true) {
-                    var kk = Object.keys(t.sub);
-                    if (kk.length == 1 && t.prop == '') {
-                        loc += ' ' + kk[0];
-                        t = t.sub[kk[0]];
-                    } else {
-                        break;
-                    }
-                }
-                loc = loc.replace(/([^,]) &/g,'$1');
-                if (indent == '') {
-                    loc = loc.replace(/^&/,'');
-                }
-                output += indent + loc + ' {';
-                output += dump(t,indent + '  ');
-                output += "\n";
-            })
-
-            if (multiline) output += indent;
-            if (!multiline && indent)
-                output += "}";
-            return output;
-        }
-
-        var root = go();
-        post(root)
-        collapse(root)
-        applyMixins(root,[])
-
-
-        function get_colors() {
-            var r = [];
-            Object.keys(colors).forEach(function(x){
-                var c = colors[x];
-                if (c.name[0] == '@') {
-                    r.push(c.name+':#'+x+'; // '+colors[x].ref+' times referenced');
-                }
-            })
-            return r.sort().join('\n')
-        }
-
-        if (env) {
-            env.colors = colors;
-        }
-
-        return [ '/*redduck re-less; less refactorizer, http://github.com/nakosung/reless */', get_colors(), dump(root) ].join('\n');
-    }
-
-
 
     function Ctrl($scope,$element,$window) {
         $scope.input = $('.example',$element).html();
@@ -538,7 +97,8 @@
         display:block;
     }
 </style>
-<h3>OK! refactor LESS</h3>
+<h3>RE-LESS; Less refactorizer</h3>
+<p>http://github.com/nakosung/reless</p>
 <div ng-controller='Ctrl'>
     <style type="text/css">
         table { width: 100%; }
@@ -557,77 +117,63 @@
         <button ng-click="go()">GO!</button>
         <tr>
             <td>
-                <textarea cols="30" rows="10" ui-codemirror="{theme:'monokai'}" ng-model='input' update-on-blur class='input'>
-                </textarea>
+                <textarea ng-model='input' update-on-blur></textarea>
             </td>
             <td>
-                <textarea cols="30" rows="10" ui-codemirror="{theme:'monokai'}" ng-model='output' class='output'></textarea>
+                <textarea ui-codemirror="{theme:'monokai',lineWrapping:true}" ng-model='output'></textarea>
             </td>
         </tr>
     </table>
     <textarea name="example" class="example" cols="30" rows="10" style='display:none'>
-        .none(){display:none;}
-        .block(){display:block}
-        .tl(@x,@y){top:@y;left:@x}
-        .inline(){display:inline-block;}
-        .fl(){float:left}
-        .trans(){background:transparent;}
-        .black-border(){border:1px solid #000;}
-        .zborder(){border:0px;}
-        .zpadding(){padding:0;}
-        .zmargin(){margin:0;}
-        .border-box(){-webkit-box-sizing:border-box;}
-        .vcenter(){vertical-align:middle;}
-        .tcenter(){text-align:center;}
-        .rel(){position:relative;}
-        .abs(){position:absolute;}
-        .bold(){font-weight:bold;}
-        .normal(){font-weight:normal;}
-        .fr(){float:right;}
-        .cp(){cursor:pointer;}
-        .cb(){clear:both;}
-        .pd_r1(){padding-right:1px;}
-        .scroll(){width:100%;height:100%;overflow:hidden;overflow-y:auto;}
-        .size(@w,@h){width:@w;height:@h}
-        .bg(@img){background:url(@img);}
-        .bg-repeatx(@img){background:url(@img) repeat-x;}
-        .customScroll::-webkit-scrollbar{width:14px;}
-        .customScroll::-webkit-scrollbar-track{border-right:1px solid #020202;background:#0c0c0c;}
-        .customScroll::-webkit-scrollbar-thumb{cursor:pointer;width:12px;border:1px solid #060d10;background:#05bee4;}
-        .truncate(){white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-        .wrap{position:relative;width:1280px;height:960px;margin:0 auto;}
-        .top{position:relative;width:1280px;height:117px;margin:0 auto;background:url(../img/top/top_bg.png) center 0 no-repeat;}
-        .info{position:relative;width:375px;height:117px;float:left;float:left;}
-        .gnb{position:relative;width:599px;height:117px;float:right;float:right;}
-        .contents{position:relative;width:1280px;height:692px;padding:55px 0;margin:0 auto;clear:both;clear:both;z-index:100;overflow:hidden;}
-        .contents_swf{position:absolute;width:1280px;height:802px;z-index:1;top:0;left:0;display:none;}
-        .contents_bg{position:absolute;width:1280px;height:802px;z-index:107;background:url(../img/contents/contents_bg.png);top:0;left:0;display:none;}
-        .if{position:relative;width:1126px;height:689px;margin:0 auto;clear:both;clear:both;}
-        .footer{position:relative;width:1280px;height:41px;margin:-3px auto 0;clear:both;clear:both;background:url(../img/footer/footer_bg.png) center 0 no-repeat;}
-        .f_bt{position:relative;float:left;float:left;width:548px;height:41px;}
-        .f_gift{position:relative;float:left;float:left;width:182px;height:41px;background:url(../img/footer/f_bt_bg.png);}
-        .f_slide{position:relative;float:left;float:left;width:365px;height:41px;}
-        .exit{position:relative;float:right;float:right;width:284px;height:41px;background:url("../img/footer/exit_bg.png") no-repeat;}
-        .users{position:absolute;left:-285px;top:61px;z-index:107;}
-        .users_tab{position:relative;width:285px;height:670px;float:left;float:left;}
-        .users_img{position:relative;width:29px;height:279px;float:left;float:left;cursor:pointer;cursor:pointer;}.users_img span{position:absolute;width:29px;top:105px;left:0;text-align:center;color:#00ffff;font-size:12px;}
-        .users_tab1{display:block;}
-        .users_tab2{display:none;}
-        .users_tab3{display:none;}
-        .users_tab4{display:none;}
-        .users_li1{float:left;float:left;height:77px;border-left:1px solid #000000;}
-        .users_li2{float:left;float:left;height:77px;}
-        .users_li3{float:left;float:left;height:77px;}
-        .users_li4{float:left;float:left;height:77px;}
-        .users_title{height:40px;border-right:1px solid #000000;clear:both;clear:both;width:266px;position:relative;background:url(../img/contents/users_bg.png) repeat-x;line-height:40px;font-size:13px;padding:0 9px;}.users_title h2{color:#00fffa;font-size:13px;font-weight:normal;}.users_title h2 strong{color:#ffb400;font-weight:normal;font-size:13px;}
-        .users_title span{position:absolute;right:5px;top:5px;display:block;width:69px;height:26px;background:url(../img/contents/users_select_bg.png) right 0 no-repeat #001119;border:1px solid #000000;padding-right:25px;text-align:center;font-size:12px;color:#92f6ff;line-height:26px;}.users_title span ul{position:absolute;right:-1px;top:26px;display:block;display:none;border-top:1px solid #000000;z-index:105;}.users_title span ul li{display:block;background:#001119;width:94px;height:26px;border-bottom:1px solid #000000;border-left:1px solid #000000;border-right:1px solid #000000;}
-        .users_c{position:relative;clear:both;width:285px;height:514px;}
-        .users_cc h2{color:#2f7e99;background:url(../img/contents/users_h2_bg.png) repeat-x;position:relative;width:252px;border-right:1px solid #000000;border-bottom:1px solid #000000;height:29px;font-size:12px;line-height:29px;padding:0 9px;}.users_cc h2 strong{color:#ffb400;font-weight:normal;}
-        .users_cc h2 span{position:absolute;right:6px;top:6px;}
-        .users_ccc{background:#1d1d1d;border-bottom:1px solid #000000;padding:9px;width:252px;height:89px;border-right:1px solid #000000;}.users_ccc h3{color:#ffffff;font-size:12px;height:30px;position:relative;width:253px;font-weight:normal;margin:0;padding:0;}.users_ccc h3 dl dt{float:left;float:left;}
-        .users_ccc h3 dl dd{float:left;float:left;padding-left:7px;color:#ffffff;font-size:12px;line-height:30px;}
-
-
+    //@MIXIN{}
+    .none{display:none;}
+    .block{display:block;}
+    .inline{display:inline-block;}
+    .trans{background:transparent;}
+    .black-border{border:1px solid #000;}
+    .zborder{border:0px;}
+    .zpadding{padding:0;}
+    .zmargin{margin:0;}
+    .border-box{-webkit-box-sizing:border-box;}
+    .vcenter{vertical-align:middle;}
+    .tcenter{text-align:center;}
+    .rel{position:relative;}
+    .abs{position:absolute;}
+    .bold{font-weight:bold;}
+    .normal{font-weight:normal;}
+    .fl{float:left;}
+    .fr{float:right;}
+    .cp{cursor:pointer;}
+    .cb{clear:both;}
+    .pd_r1{padding-right:1px;}
+    .outline1(@color) {outline:solid 1px @color}
+    .size(@w,@h) {width:@w;height:@h}
+    .xy(@x,@y) {top:@y;left:@x}
+    .bg-norepeat(@img) {background:url(@img) no-repeat}
+    //@MIXOUT{}
+    .scroll{width:100%;height:100%;overflow:hidden;overflow-y:auto;}
+    .customScroll::-webkit-scrollbar{width:14px;}
+    .customScroll::-webkit-scrollbar-track{border-right:1px solid #020202;background:#0c0c0c;}
+    .customScroll::-webkit-scrollbar-thumb{cursor:pointer;width:12px;border:1px solid #060d10;background:#05bee4;}
+    .truncate{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .wrap{position:relative;width:1280px;height:960px;margin:0 auto;}
+    .top{position:relative;width:1280px;height:117px;margin:0 auto;background:url(../img/top/top_bg.png) center 0 no-repeat;}
+    .info{position:relative;width:375px;height:117px;float:left;float:left;}
+    .gnb{position:relative;width:599px;height:117px;float:right;float:right;}
+    .contents{position:relative;width:1280px;height:692px;padding:55px 0;margin:0 auto;clear:both;clear:both;z-index:100;overflow:hidden;}
+    .contents_swf{position:absolute;width:1280px;height:802px;z-index:1;top:0;left:0;display:none;}
+    .contents_bg{position:absolute;width:1280px;height:802px;z-index:107;background:url(../img/contents/contents_bg.png);top:0;left:0;display:none;}
+    .if{position:relative;width:1126px;height:689px;margin:0 auto;clear:both;clear:both;}
+    .footer{position:relative;width:1280px;height:41px;margin:-3px auto 0;clear:both;clear:both;background:url(../img/footer/footer_bg.png) center 0 no-repeat;}
+    .f_bt{position:relative;float:left;float:left;width:548px;height:41px;}
+    .f_gift{position:relative;float:left;float:left;width:182px;height:41px;background:url(../img/footer/f_bt_bg.png);}
+    .f_slide{position:relative;float:left;float:left;width:365px;height:41px;}
+    .exit{position:relative;float:right;float:right;width:284px;height:41px;background:url("../img/footer/exit_bg.png") no-repeat;}
+    .users{position:absolute;left:-285px;top:61px;z-index:107;}
+    .users_tab{position:relative;width:285px;height:670px;float:left;float:left;}
+    .users_img{position:relative;width:29px;height:279px;float:left;float:left;cursor:pointer;cursor:pointer;}.users_img span{position:absolute;width:29px;top:105px;left:0;text-align:center;color:#00ffff;font-size:12px;}
+    .users_tab1{display:block;}
+    .users_tab2{display:none;}
 
 
     </textarea>

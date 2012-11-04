@@ -1,4 +1,4 @@
-/* CSS crunched with Crunch - http://crunchapp.net/ */
+//@MIXIN{}
 .none{display:none;}
 .block{display:block;}
 .inline{display:inline-block;}
@@ -19,6 +19,11 @@
 .cp{cursor:pointer;}
 .cb{clear:both;}
 .pd_r1{padding-right:1px;}
+.outline1(@color) {outline:solid 1px @color}
+.size(@w,@h) {width:@w;height:@h}
+.xy(@x,@y) {top:@y;left:@x}
+.bg-norepeat(@img) {background:url(@img) no-repeat}
+//@MIXOUT{}
 .scroll{width:100%;height:100%;overflow:hidden;overflow-y:auto;}
 .customScroll::-webkit-scrollbar{width:14px;}
 .customScroll::-webkit-scrollbar-track{border-right:1px solid #020202;background:#0c0c0c;}
@@ -660,32 +665,32 @@ li{margin:0;padding:0;}
 #RD_Room .waiting_list2{position:relative;width:561px;background:url("../img/contents/waiting_h3_bg2.png") no-repeat;}#RD_Room .waiting_list2 h2{position:relative;padding-left:40px;width:521px;height:38px;text-align:center;line-height:38px;font-size:15px;color:#ffffff;}
 #RD_Room .waiting_list2 .waiting_list_contents{position:relative;width:561px;height:302px;margin-top:1px;background:url(../img/contents/waiting_list_contents_bg.png) 0 297px no-repeat;}
 #RD_Room .waiting_list3{position:relative;width:561px;margin:4px 0 0 0;background:url("../img/contents/waiting_h3_bg3.png") no-repeat;}#RD_Room .waiting_list3 h2{position:relative;padding-left:40px;width:521px;height:38px;text-align:center;line-height:38px;font-size:15px;color:#ffffff;}#RD_Room .waiting_list3 h2 span{position:absolute;right:9px;top:8px;cursor:pointer;cursor:pointer;}
-#RD_Room .waiting_list3 .waiting_list_contents{position:relative;width:561px;height:302px;margin-top:1px;background:url(../img/contents/waiting_list_contents_bg.png) 0 297px no-repeat;}#RD_Room .waiting_list3 .waiting_list_contents .waiting_list_ul .waiting_list_ul_li4{width:184px;height:36px;line-height:36px;color:#ffffff;font-size:13px;padding:0;margin:0;display:block;}#RD_Room .waiting_list3 .waiting_list_contents .waiting_list_ul .waiting_list_ul_li4 a:hover{color:#00f0ff;font-size:13px;}
-#RD_Room .waiting_list3 .waiting_list_contents .waiting_list_ul .waiting_list_ul_li41{width:41px;height:25px;padding:11px 15px 0 15px;margin:0;}
+#RD_Room .waiting_list3 .waiting_list_contents{position:relative;width:561px;height:302px;margin-top:1px;background:url(../img/contents/waiting_list_contents_bg.png) 0 297px no-repeat;}#RD_Room .waiting_list3 .waiting_list_contents .waiting_list_ul .waiting_list_ul .waiting_list_ul_li4{width:184px;height:36px;line-height:36px;color:#ffffff;font-size:13px;padding:0;margin:0;display:block;}#RD_Room .waiting_list3 .waiting_list_contents .waiting_list_ul .waiting_list_ul .waiting_list_ul_li4 a:hover{color:#00f0ff;font-size:13px;}
+#RD_Room .waiting_list3 .waiting_list_contents .waiting_list_ul .waiting_list_ul .waiting_list_ul_li41{width:41px;height:25px;padding:11px 15px 0 15px;margin:0;}
 #RD_Room .boxMidCenter7 .waiting_list_contents{position:relative;width:561px;height:593px;margin-top:1px;}
 #RD_Room .waiting_list_ul{display:block;width:561px;height:36px;background:url("../img/contents/waiting_list_ul_bg.png") no-repeat;clear:both;clear:both;color:#ffffff;font-size:13px;}#RD_Room .waiting_list_ul li{display:block;float:left;float:left;cursor:pointer;cursor:pointer;margin-bottom:1px;color:#ffffff;font-size:13px;}
 #RD_Room .waiting_list_ul li:hover{color:#ffba00;font-size:13px;}
 #RD_Room .waiting_list_ul:hover{background:url("../img/contents/waiting_list_ul_bg_on.png") no-repeat;color:#ffba00;font-size:13px;}
-#RD_Room .waiting_list_ul_li1{width:66px;height:33px;padding:3px 0 0 4px;margin:0;}
-#RD_Room .waiting_list_ul_li2{width:29px;height:33px;padding:3px 0 0 0;margin:0;}
-#RD_Room .waiting_list_ul_li3{width:40px;height:33px;padding:3px 0 0 0;margin:0;}
-#RD_Room .waiting_list_ul_li4{width:255px;height:36px;line-height:36px;color:#ffffff;font-size:13px;padding:0;margin:0;display:block;}#RD_Room .waiting_list_ul_li4 a{color:#ffffff;font-size:13px;}
-#RD_Room .waiting_list_ul_li4 a:hover{color:#ffba00;font-size:13px;}
-#RD_Room .waiting_list_ul_li4 ul{position:absolute;left:230px;top:15px;}#RD_Room .waiting_list_ul_li4 ul li{border:0px;display:block;width:95px;height:31px;background:url("../img/contents/lobby_li_off.png") no-repeat;color:#6f9ea8;font-size:13px;text-align:center;padding:0;clear:both;clear:both;line-height:31px;margin:0;}
-#RD_Room .waiting_list_ul_li4 ul li:hover{background:url("../img/contents/lobby_li_on.png") no-repeat;color:#ffffff;font-size:13px;border:0px;display:block;width:95px;height:31px;text-align:center;padding:0;clear:both;clear:both;line-height:31px;margin:0;}
-#RD_Room .waiting_list_ul_li5{width:31px;height:26px;text-align:center;padding:10px 0 0 0;margin:0;}
-#RD_Room .waiting_list_ul_li6{width:31px;height:26px;text-align:center;padding:10px 0 0 0;margin:0;}
-#RD_Room .waiting_list_ul_li7{width:31px;height:26px;text-align:center;padding:10px 0 0 0;margin:0;}
-#RD_Room .waiting_list_ul_li8{width:74px;height:36px;padding:0;margin:0;}#RD_Room .waiting_list_ul_li8 span{position:absolute;right:0;}
+#RD_Room .waiting_list_ul .waiting_list_ul_li1{width:66px;height:33px;padding:3px 0 0 4px;margin:0;}
+#RD_Room .waiting_list_ul .waiting_list_ul_li2{width:29px;height:33px;padding:3px 0 0 0;margin:0;}
+#RD_Room .waiting_list_ul .waiting_list_ul_li3{width:40px;height:33px;padding:3px 0 0 0;margin:0;}
+#RD_Room .waiting_list_ul .waiting_list_ul_li4{width:255px;height:36px;line-height:36px;color:#ffffff;font-size:13px;padding:0;margin:0;display:block;}#RD_Room .waiting_list_ul .waiting_list_ul_li4 a{color:#ffffff;font-size:13px;}
+#RD_Room .waiting_list_ul .waiting_list_ul_li4 a:hover{color:#ffba00;font-size:13px;}
+#RD_Room .waiting_list_ul .waiting_list_ul_li4 ul{position:absolute;left:230px;top:15px;}#RD_Room .waiting_list_ul .waiting_list_ul_li4 ul li{border:0px;display:block;width:95px;height:31px;background:url("../img/contents/lobby_li_off.png") no-repeat;color:#6f9ea8;font-size:13px;text-align:center;padding:0;clear:both;clear:both;line-height:31px;margin:0;}
+#RD_Room .waiting_list_ul .waiting_list_ul_li4 ul li:hover{background:url("../img/contents/lobby_li_on.png") no-repeat;color:#ffffff;font-size:13px;border:0px;display:block;width:95px;height:31px;text-align:center;padding:0;clear:both;clear:both;line-height:31px;margin:0;}
+#RD_Room .waiting_list_ul .waiting_list_ul_li5{width:31px;height:26px;text-align:center;padding:10px 0 0 0;margin:0;}
+#RD_Room .waiting_list_ul .waiting_list_ul_li6{width:31px;height:26px;text-align:center;padding:10px 0 0 0;margin:0;}
+#RD_Room .waiting_list_ul .waiting_list_ul_li7{width:31px;height:26px;text-align:center;padding:10px 0 0 0;margin:0;}
+#RD_Room .waiting_list_ul .waiting_list_ul_li8{width:74px;height:36px;padding:0;margin:0;}#RD_Room .waiting_list_ul .waiting_list_ul_li8 span{position:absolute;right:0;}
 #RD_Room .back_game{position:relative;float:left;float:left;width:279px;}
 #RD_Room .back_game_info{position:relative;width:279px;height:256px;margin-bottom:15px;background:url(../img/contents/back_game_info_bg.png) center 37px no-repeat;}#RD_Room .back_game_info h2{position:relative;width:265px;height:27px;padding:12px 0 0 14px;color:#ffffff;font-size:13px;}
 #RD_Room .back_game_my{position:relative;width:277px;height:74px;}#RD_Room .back_game_my h3{position:absolute;left:9px;top:28px;color:#ffffff;font-size:13px;}
 #RD_Room .back_game_my ul li{color:#00f0ff;font-size:12px;display:block;width:185px;height:37px;padding-left:90px;line-height:37px;}#RD_Room .back_game_my ul li span{float:right;float:right;line-height:37px;display:block;height:37px;padding-right:12px;color:#00f0ff;font-size:12px;width:88px;}
 #RD_Room .back_game_ul{position:relative;width:277px;height:117px;}#RD_Room .back_game_ul dt{width:68px;height:39px;float:left;float:left;color:#0090a1;font-size:12px;line-height:39px;padding-left:13px;}
 #RD_Room .back_game_ul dd{float:left;float:left;width:196px;height:39px;}#RD_Room .back_game_ul dd ul li{float:left;float:left;}
-#RD_Room .back_game_ul_li2{width:117px;height:39px;color:#5d8c91;font-size:12px;line-height:39px;}
-#RD_Room .back_game_ul_li3{width:29px;height:39px;color:#456467;font-size:12px;line-height:39px;}
-#RD_Room .back_game_ul_li4{width:50px;height:39px;color:#456467;font-size:12px;line-height:39px;}
+#RD_Room .back_game_ul .back_game_ul_li2{width:117px;height:39px;color:#5d8c91;font-size:12px;line-height:39px;}
+#RD_Room .back_game_ul .back_game_ul_li3{width:29px;height:39px;color:#456467;font-size:12px;line-height:39px;}
+#RD_Room .back_game_ul .back_game_ul_li4{width:50px;height:39px;color:#456467;font-size:12px;line-height:39px;}
 #RD_Room .chat{position:relative;width:279px;height:385px;}#RD_Room .chat h2{color:#8feeff;font-size:12px;line-height:33px;position:relative;width:259px;height:33px;text-align:center;}
 #RD_Room .chat_view{position:relative;height:283px;margin:0;width:256px;color:#037387;font-size:12px;line-height:27px;background:url(../img/contents/chat_bg.png) center -40px no-repeat;}#RD_Room .chat_view .scroll{color:#037387;font-size:12px;line-height:27px;width:100%;height:100%;overflow:hidden;overflow-y:auto;padding:10px 0 10px 10px;}
 #RD_Room .chat_text{position:relative;background:url("../img/contents/chat_text_bg.png") no-repeat;margin:0;width:254px;height:28px;line-height:28px;padding-left:12px;color:#ffffff;font-size:12px;}#RD_Room .chat_text span{position:absolute;right:2px;top:2px;cursor:pointer;cursor:pointer;}
@@ -1332,8 +1337,8 @@ div.contents.ranking>div{padding-left:100px;padding-right:100px;}
 #RD_Room .waiting_list1 .waiting_list_contents{background:url(../img/contents/img_GameRoomList_BG.png);background-position:-4px -3px;}
 #RD_Room .waiting_list2 .waiting_list_contents{background:url(../img/contents/img_GameRoomLis_Balance_BG.png);background-position:-4px -3px;}
 #RD_Room .waiting_list2 h2 span{position:absolute;right:9px;top:8px;cursor:pointer;cursor:pointer;}
-#RD_Room .waiting_list3 .waiting_list_contents{background:url(../img/contents/img_GameRoomLis_Balance_BG.png);background-position:-4px -3px;}#RD_Room .waiting_list3 .waiting_list_contents .waiting_list_ul .waiting_list_ul_li5{position:relative;left:72px;}
-#RD_Room .waiting_list3 .waiting_list_contents .waiting_list_ul .waiting_list_ul_li6{position:relative;left:72px;}
+#RD_Room .waiting_list3 .waiting_list_contents{background:url(../img/contents/img_GameRoomLis_Balance_BG.png);background-position:-4px -3px;}#RD_Room .waiting_list3 .waiting_list_contents .waiting_list_ul .waiting_list_ul .waiting_list_ul_li5{position:relative;left:72px;}
+#RD_Room .waiting_list3 .waiting_list_contents .waiting_list_ul .waiting_list_ul .waiting_list_ul_li6{position:relative;left:72px;}
 #RD_Room .boxMid .boxMidLeft11{height:255px;}
 #RD_Room .boxMid .boxMidRight11{height:255px;}
 #RD_Room .boxMid .boxMidCenter11{height:255px;}
@@ -1347,9 +1352,9 @@ div.contents.ranking>div{padding-left:100px;padding-right:100px;}
 #RD_Room .testContainer10 .boxMid{overflow:hidden;}
 #RD_Room .boxMidCenter12{overflow:hidden;}
 #RD_Room .waiting_list_ul{-webkit-font-smoothing:antialiased;font-smoothing:antialiased;}
-#RD_Room .waiting_list_ul_li5{width:31px;height:26px;text-align:center;padding:3px 0 0 0;margin:0;}
-#RD_Room .waiting_list_ul_li6{width:31px;height:26px;text-align:center;padding:3px 0 0 0;margin:0;}
-#RD_Room .waiting_list_ul_li8{width:74px;height:36px;padding:0;margin:0;text-align:center;line-height:35px;}#RD_Room .waiting_list_ul_li8 span{position:absolute;right:-12px;}
+#RD_Room .waiting_list_ul .waiting_list_ul_li5{width:31px;height:26px;text-align:center;padding:3px 0 0 0;margin:0;}
+#RD_Room .waiting_list_ul .waiting_list_ul_li6{width:31px;height:26px;text-align:center;padding:3px 0 0 0;margin:0;}
+#RD_Room .waiting_list_ul .waiting_list_ul_li8{width:74px;height:36px;padding:0;margin:0;text-align:center;line-height:35px;}#RD_Room .waiting_list_ul .waiting_list_ul_li8 span{position:absolute;right:-12px;}
 #RD_Room .chat_view{position:relative;width:245px;height:260px;margin:4px 5px;color:#037387;font-size:12px;line-height:27px;overflow-y:auto;padding:10px;}
 #RD_Room .chat_text{position:relative;background:url("../img/contents/chat_text_bg.png") no-repeat;margin:0 5px;width:225px;height:28px;line-height:28px;padding-left:12px;color:#ffffff;font-size:12px;border:0px;}
 #RD_Room .chat_input_body{position:relative;left:5px;top:-43px;}
@@ -1359,7 +1364,7 @@ div.contents.ranking>div{padding-left:100px;padding-right:100px;}
 #RD_Room .op_setting_ul li span ul{display:block;}
 #RD_Room .op_setting_ul li .op_override{position:relative;width:139px;height:14px;border-radius:5px;float:right;float:right;font-size:13px;padding:6px 8px;color:#68afb7;cursor:pointer;cursor:pointer;}
 #RD_Room .op_setting_ul li ul{position:absolute;top:24px;left:0;padding:0;margin:0;width:153px;border-top:1px solid #00161b;border-right:1px solid #00161b;border-left:1px solid #00161b;z-index:103;}#RD_Room .op_setting_ul li ul li{display:block;width:137px;height:22px;background:#000000;padding:0 8px;border-bottom:1px solid #00161b;margin-bottom:0;color:#92f6ff;font-size:12px;line-height:22px;}
-#RD_Room .waiting_list_ul_li9{position:absolute;left:280px;}
+#RD_Room .waiting_list_ul .waiting_list_ul_li9{position:absolute;left:280px;}
 .boxMidCenter15,.boxBottomCenter15{height:100%;}
 #RD_Room .boxtopcenter10,.boxmidcenter10,.boxbottomcenter10{overflow:hidden;height:100%;}
 #MatchResult div.result_container div.result_exp div.lose{background:url("") no-repeat;}
