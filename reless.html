@@ -4,16 +4,19 @@
     <title></title>
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/angularjs/1.0.2/angular.min.js"></script>
-    <script type="text/javascript" src="angular-ui.min.js"></script>
     <link rel="stylesheet" href="angular-ui.min.css">
     <script type="text/javascript" src="codemirror.js"></script>
-    <script type="text/javascript" src="javascript.js"></script>
+    <script type="text/javascript" src="less.js"></script>
     <link rel="stylesheet" href="codemirror.css">
+    <link rel="stylesheet" href="docs.css">
     <link rel="stylesheet" href="monokai.css">
+    <script type="text/javascript" src="angular-ui.min.js"></script>
+
     <script type="text/javascript" src="ColorJizz%20-%20js%20-%200.2.js"></script>
 </head>
 <script type="text/javascript">
-    var myApp = angular.module('MyApp',[])
+
+    var myApp = angular.module('MyApp',['ui'])
     myApp.value('ui.config', {})
     var updateOnBlur = function() {
         return {
@@ -51,6 +54,8 @@
     function refactor(input,env) {
         colors = {};
 
+        input = input.replace(/\/\*[^*]*\*\//g,'');
+        input = input.replace(/\/\/[^\n]*/g,'');
         input = input.trim();
         input = input.replace(/\s+/g,' ');
         function eat(x) {
@@ -131,11 +136,11 @@
 
             var x = token();
             if (x != '}') {
-                while (true) {
+                while (input.length) {
                     var y = token();
                     if (y == '{') {
                         add(sub,x);
-                        x = token();
+                        x = input.length && token();
                     } else if (y == '}') {
                         prop.push(x.trim());
                         break;
@@ -291,7 +296,7 @@
                         return false;
                     }
 
-                    if (n.match(/[^0-9a-zA-Z]/)) {
+                    if (n.match(/\//)) {
                         args[m] = '"' + n + '"'
                     } else {
                         args[m] = n;
@@ -306,7 +311,7 @@
 //                console.log(mixinName,target)
                 var a = mixin.p;
                 var b = target.p;
-                if (!a || !b) return;
+                if (a == undefined || b == undefined) return;
 
 
                 var n = a.length, m = b.length;
@@ -428,6 +433,7 @@
                 output += x.prop;
                 if (multiline) output += '\n'; else output += ' ';
             }
+
             k.forEach(function(y){
                 var loc = y;
                 var t = x.sub[y];
@@ -450,17 +456,12 @@
             })
 
             if (multiline) output += indent;
-            if (!multiline || indent)
+            if (!multiline && indent)
                 output += "}";
             return output;
         }
 
-        var root = {sub:{}};
-        while (input.length) {
-            var key = token();
-            if (token() != "{") throw 'error';
-            add(root.sub,key);
-        }
+        var root = go();
         post(root)
         collapse(root)
         applyMixins(root,[])
@@ -542,7 +543,6 @@
     <style type="text/css">
         table { width: 100%; }
         td { width: 50% ;}
-        textarea { width: 100%; height:600px}
     </style>
     <div>
         <span ng-repeat="(k,v) in env.colors" class='dot' style=
@@ -557,17 +557,18 @@
         <button ng-click="go()">GO!</button>
         <tr>
             <td>
-                <textarea ui-codemirror="{theme:'monokai'}" ng-model='input' update-on-blur>
+                <textarea cols="30" rows="10" ui-codemirror="{theme:'monokai'}" ng-model='input' update-on-blur class='input'>
                 </textarea>
             </td>
             <td>
-                <textarea ui-codemirror="{theme:'monokai'}" ng-model='output'></textarea>
+                <textarea cols="30" rows="10" ui-codemirror="{theme:'monokai'}" ng-model='output' class='output'></textarea>
             </td>
         </tr>
     </table>
     <textarea name="example" class="example" cols="30" rows="10" style='display:none'>
         .none(){display:none;}
         .block(){display:block}
+        .tl(@x,@y){top:@y;left:@x}
         .inline(){display:inline-block;}
         .fl(){float:left}
         .trans(){background:transparent;}
