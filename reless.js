@@ -35,13 +35,13 @@ function refactor(input,env) {
 
     function token() {
         if (input.length == 0) throw 'unexpected end';
-        var a = input.indexOf("{");
-        var b = input.indexOf("}");
-        var c = input.indexOf(";");
-        if (a == 0 || b == 0) return eat(1);
-        if (a < 0 && b < 0) { return eat(c < 0 ? input.length : c+1); }
-        if (b < 0 || a>0 && a<b) return eat(c < 0 || c > a ? a : c+1);
-        if (a < 0 || b>0 && b<a) return eat(c < 0 || c > b ? b : c+1);
+        var leftBrace = input.indexOf("{");
+        var rightBrace = input.indexOf("}");
+        var semiColon = input.indexOf(";");
+        if (leftBrace == 0 || rightBrace == 0) return eat(1);
+        if (leftBrace < 0 && rightBrace < 0) { return eat(semiColon < 0 ? input.length : semiColon+1); }
+        if (rightBrace < 0 || leftBrace>0 && leftBrace<rightBrace) return eat(semiColon < 0 || semiColon > leftBrace ? leftBrace : semiColon+1);
+        if (leftBrace < 0 || rightBrace>0 && rightBrace<leftBrace) return eat(semiColon < 0 || semiColon > rightBrace ? rightBrace : semiColon+1);
     }
 
     function add(root,key) {
@@ -95,20 +95,20 @@ function refactor(input,env) {
         var prop = [];
         var sub = {};
         var mixins = {};
-        var mixin = false;
+        var implicitMixin = false;
 
         var x = token();
         if (x != '}') {
             while (input.length) {
-                if (x == '//@MIXIN') mixin = true;
-                if (x == '//@MIXOUT') mixin = false;
+                if (x == '//@MIXIN') implicitMixin = true;
+                if (x == '//@MIXOUT') implicitMixin = false;
 
                 var y = token();
                 if (y == '{') {
                     add(sub,x);
                     x = input.length && token();
 
-                    if (mixin) {
+                    if (implicitMixin) {
                         mixins[x] = 1;
                     }
                 } else if (y == '}') {
@@ -206,11 +206,11 @@ function refactor(input,env) {
     }
 
     function applyMixins(x,mixins) {
-        var lmixins = {};
-        $.extend(lmixins,mixins);
+        var localMixins = {};
+        $.extend(localMixins,mixins);
         $.each(x.sub,function(k,v){
             if (is_mixin(x,k)) {
-                lmixins[k] = v
+                localMixins[k] = v
                 v.args = []
                 if (k.match(/\(.*\)/)) {
                     k.replace(/.*\((.*)\)/,'$1').replace(/\s*/g,'').split(',').forEach(function(p){
@@ -306,22 +306,20 @@ function refactor(input,env) {
                 }
             }
         }
-        var loop = 0;
         while (true) {
             var applied = 0;
             $.each(x.sub,function(k,v){
                 if (is_mixin(x,k)) return true;
-                $.each(lmixins,function(mk,mv){
+                $.each(localMixins,function(mk,mv){
                     if (angular.isObject(mv) && mv != v && replace(mk,mv,v)) {
                         applied++;
                     }
                 })
             })
             if (applied == 0) break;
-            if (loop++ == 3) break;
         }
         $.each(x.sub,function(k,v){
-            applyMixins(v,lmixins)
+            applyMixins(v,localMixins)
         })
     }
 
